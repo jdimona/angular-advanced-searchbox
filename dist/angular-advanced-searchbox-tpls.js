@@ -125,6 +125,10 @@ angular.module('angular-advanced-searchbox', [])
                         if (index === undefined)
                             return;
 
+                        if (e && angular.element(e.currentTarget).is("input"))
+                            return;
+
+
                         var searchParam = $scope.searchParams[index];
                         searchParam.editMode = false;
 
