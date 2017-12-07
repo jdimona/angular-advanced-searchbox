@@ -40,6 +40,11 @@ angular.module('angular-advanced-searchbox', [])
                     var searchThrottleTimer;
                     var changeBuffer = [];
 
+                    $scope.advancedSearchBoxClicked = function(e) {
+                        if (!angular.element(e.target).is(".value input") && !$scope.focus)
+                            $scope.setFocusFor('searchbox');
+                    };
+
                     $scope.$watch('model', function (newValue, oldValue) {
 
                         if(angular.equals(newValue, oldValue))
@@ -124,10 +129,6 @@ angular.module('angular-advanced-searchbox', [])
                     $scope.leaveEditMode = function(e, index) {
                         if (index === undefined)
                             return;
-
-                        if (e && angular.element(e.currentTarget).is("input"))
-                            return;
-
 
                         var searchParam = $scope.searchParams[index];
                         searchParam.editMode = false;
