@@ -14,6 +14,9 @@ angular.module('angular-advanced-searchbox', [])
     .directive('nitAdvancedSearchbox', function() {
         return {
             restrict: 'E',
+            transclude: {
+                suggestionsDropdown: "?nitAdvancedSearchboxSuggestionsDropdown"
+            },
             scope: {
                 model: '=ngModel',
                 parameters: '=',
@@ -25,6 +28,12 @@ angular.module('angular-advanced-searchbox', [])
             replace: true,
             templateUrl: function(element, attr) {
                 return attr.templateUrl || 'angular-advanced-searchbox.html';
+            },
+            link: function(scope, elem, attrs, ctrl, transcludeFn) {
+                if (transcludeFn.isSlotFilled("suggestionsDropdown")) {
+                    elem.find('.suggestions-dropdown-content')
+                        .html(transcludeFn(scope, null, null, "suggestionsDropdown"));
+                }
             },
             controller: [
                 '$scope', '$attrs', '$element', '$timeout', '$filter', 'setFocusFor',

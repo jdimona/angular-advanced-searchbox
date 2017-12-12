@@ -88,6 +88,7 @@
     .advancedSearchBox .search-parameter-suggestions {
         cursor: auto;
         display: block;
+        background-color: white;
     }
 
         .advancedSearchBox .search-parameter-suggestions .title {
