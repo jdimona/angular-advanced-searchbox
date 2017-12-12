@@ -10,7 +10,7 @@
             </a>
             <div class="key" data-key="{{searchParam.key}}" ng-click="enterEditMode($event, $index)">{{searchParam.name}}:</div>
             <div class="value">
-                <span ng-show="!searchParam.editMode" ng-click="enterEditMode($event, $index)">{{searchParam.value}}</span>
+                <span ng-show="!searchParam.editMode" ng-click="enterEditMode($event, $index)">{{searchParam.viewValue}}</span>
                 <input name="value"
                        type="{{searchParam.type}}"
                        nit-auto-size-input
@@ -19,8 +19,8 @@
                        ng-blur="leaveEditMode($event, $index)"
                        ng-show="searchParam.editMode"
                        ng-change="searchParam.restrictToSuggestedValues !== true ? searchParamValueChanged(searchParam) : null"
-                       ng-model="searchParam.value"
-                       uib-typeahead="suggestedValue for suggestedValue in searchParam.suggestedValues | filter:$viewValue"
+                       ng-model="searchParam.viewValue"
+                       uib-typeahead="(suggestedValue.name || suggestedValue) for suggestedValue in searchParam.suggestedValues | filter:$viewValue"
                        typeahead-min-length="0"
                        typeahead-on-select="searchParamTypeaheadOnSelect($item, searchParam)"
                        typeahead-editable="searchParam.restrictToSuggestedValues !== true"

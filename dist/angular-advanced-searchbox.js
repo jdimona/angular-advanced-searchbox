@@ -104,8 +104,11 @@ angular.module('angular-advanced-searchbox', [])
                         }
                     }, true);
 
-                    $scope.searchParamValueChanged = function (param) {
-                        updateModel('change', param.key, param.index, param.value);
+                    $scope.searchParamValueChanged = function (param, immediate) {
+                        if (!param.restrictToSuggestedValues || (!param.value && param.viewValue)) {
+                            param.value = param.viewValue;
+                        }
+                        updateModel('change', param.key, param.index, param.value, immediate);
                     };
 
                     $scope.searchQueryChanged = function (query) {
@@ -135,9 +138,16 @@ angular.module('angular-advanced-searchbox', [])
 
                         $scope.$emit('advanced-searchbox:leavedEditMode', searchParam);
 
+                        if (!searchParam.restrictToSuggestedValues || (!searchParam.value && searchParam.viewValue)) {
+                            searchParam.value = searchParam.viewValue;
+                        }
+
                         // remove empty search params
-                        if (!searchParam.value)
+                        if (!searchParam.value) {
                             $scope.removeSearchParam(index);
+                        } else {
+                            updateModel('change', searchParam.key, searchParam.index, searchParam.value, true);
+                        }
                     };
 
                     $scope.searchQueryTypeaheadOnSelect = function (item, model, label) {
@@ -147,8 +157,9 @@ angular.module('angular-advanced-searchbox', [])
                     };
 
                     $scope.searchParamTypeaheadOnSelect = function (suggestedValue, searchParam) {
-                        searchParam.value = suggestedValue;
-                        $scope.searchParamValueChanged(searchParam);
+                        searchParam.value = angular.isObject(suggestedValue) ? suggestedValue.id : value;
+                        searchParam.viewValue = angular.isObject(suggestedValue) ? suggestedValue.name : value;
+                        $scope.searchParamValueChanged(searchParam, true);
                     };
 
                     $scope.isUnsedParameter = function (value, index) {
@@ -166,6 +177,8 @@ angular.module('angular-advanced-searchbox', [])
                         if(searchParam.allowMultiple)
                             internalIndex = $filter('filter')($scope.searchParams, function (param) { return param.key === searchParam.key; }).length;
 
+                        var modelValue = angular.isObject(value) ? value.id : value;
+                        var viewValue = angular.isObject(value) ? value.name : value;
                         var newIndex =
                             $scope.searchParams.push(
                                 {
@@ -177,7 +190,8 @@ angular.module('angular-advanced-searchbox', [])
                                     suggestedValues: searchParam.suggestedValues || [],
                                     restrictToSuggestedValues: searchParam.restrictToSuggestedValues || false,
                                     index: internalIndex,
-                                    value: value || ''
+                                    viewValue: viewValue || '',
+                                    value: modelValue || ''
                                 }
                             ) - 1;
 
@@ -300,7 +314,7 @@ angular.module('angular-advanced-searchbox', [])
                         restoreModel();
                     }
 
-                    function updateModel(command, key, index, value) {
+                    function updateModel(command, key, index, value, immediate) {
                         if (searchThrottleTimer)
                             $timeout.cancel(searchThrottleTimer);
 
@@ -314,33 +328,38 @@ angular.module('angular-advanced-searchbox', [])
                             value: value
                         });
 
-                        searchThrottleTimer = $timeout(function () {
-                            angular.forEach(changeBuffer, function (change) {
-                                var searchParam = $filter('filter')($scope.parameters, function (param) { return param.key === key; })[0];
-                                if(searchParam && searchParam.allowMultiple){
-                                    if(!angular.isArray($scope.model[change.key]))
-                                        $scope.model[change.key] = [];
+                        if (immediate) {
+                            executeModelUpdate(key);
+                        } else {
+                            searchThrottleTimer = $timeout(function() { executeModelUpdate(key); }, $scope.searchThrottleTime);
+                        }
+                        
+                    }
 
-                                    if(change.command === 'delete'){
-                                        $scope.model[change.key].splice(change.index, 1);
-                                        if($scope.model[change.key].length === 0)
-                                            delete $scope.model[change.key];
-                                    } else {
-                                        $scope.model[change.key][change.index] = change.value;
-                                    }
-                                } else {
-                                    if(change.command === 'delete')
+                    function executeModelUpdate(key) {
+                        angular.forEach(changeBuffer, function (change) {
+                            var searchParam = $filter('filter')($scope.parameters, function (param) { return param.key === key; })[0];
+                            if(searchParam && searchParam.allowMultiple){
+                                if(!angular.isArray($scope.model[change.key]))
+                                    $scope.model[change.key] = [];
+
+                                if(change.command === 'delete'){
+                                    $scope.model[change.key].splice(change.index, 1);
+                                    if($scope.model[change.key].length === 0)
                                         delete $scope.model[change.key];
-                                    else
-                                        $scope.model[change.key] = change.value;
+                                } else {
+                                    $scope.model[change.key][change.index] = change.value;
                                 }
-                            });
+                            } else {
+                                if(change.command === 'delete')
+                                    delete $scope.model[change.key];
+                                else
+                                    $scope.model[change.key] = change.value;
+                            }
+                        });
 
-                            changeBuffer.length = 0;
-
-                            $scope.$emit('advanced-searchbox:modelUpdated', $scope.model);
-
-                        }, $scope.searchThrottleTime);
+                        changeBuffer.length = 0;
+                        $scope.$emit('advanced-searchbox:modelUpdated', $scope.model);
                     }
 
                     function getCurrentCaretPosition(input) {
