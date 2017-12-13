@@ -305,6 +305,11 @@ angular.module('angular-advanced-searchbox', [])
                         }
                     };
 
+                    $scope.setFocus = function(e, value) {
+                        setSuggestionsPosition(e.target);
+                        $scope.focus = value;
+                    };
+
                     function restoreModel() {
                         angular.forEach($scope.model, function (value, key) {
                             if (key === 'query') {
@@ -369,6 +374,10 @@ angular.module('angular-advanced-searchbox', [])
 
                         changeBuffer.length = 0;
                         $scope.$emit('advanced-searchbox:modelUpdated', $scope.model);
+                    }
+
+                    function setSuggestionsPosition(input) {
+                        $element.find(".search-parameter-suggestions").css({left: angular.element(input).position().left});
                     }
 
                     function getCurrentCaretPosition(input) {
