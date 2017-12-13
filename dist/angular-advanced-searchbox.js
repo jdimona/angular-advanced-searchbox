@@ -337,11 +337,11 @@ angular.module('angular-advanced-searchbox', [])
                             value: value
                         });
 
-                        if (immediate) {
+                        // if (immediate) {
                             executeModelUpdate(key);
-                        } else {
-                            searchThrottleTimer = $timeout(function() { executeModelUpdate(key); }, $scope.searchThrottleTime);
-                        }
+                        // } else {
+                        //     searchThrottleTimer = $timeout(function() { executeModelUpdate(key); }, $scope.searchThrottleTime);
+                        // }
                         
                     }
 
